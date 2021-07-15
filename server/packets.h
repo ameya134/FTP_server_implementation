@@ -12,6 +12,6 @@ typedef struct metadata{
 
 typedef struct packet{
 	metadata_t metaData;
-	char *payload;
+	char payload[1024];
 
 }packet_t;
