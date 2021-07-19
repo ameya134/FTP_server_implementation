@@ -1,13 +1,14 @@
 #pragma once
+#include <stdint.h>
 
 enum PACKETTYPE{
-	DATA_PACKET,
-	COMMAND_PACKET
+	DATA_PACKET= (uint32_t)0,
+	COMMAND_PACKET=(uint32_t)1
 };
 
 typedef struct metadata{
-	int packet_len;
 	enum PACKETTYPE packetType;
+	uint32_t payload_len;
 }metadata_t;
 
 typedef struct packet{

@@ -54,9 +54,9 @@ int FTPServer::runService(void)
 	
 	printf("Listning for connection requests on port %d\n",m_port);
 
-	m_clientAddrLen = sizeof(&m_clientAddr);
+	m_clientAddrLen = sizeof(m_clientAddr);
 	while(1){
-		if(m_sock_client = accept(m_sock_server,(struct sockaddr *)&m_clientAddr,&m_clientAddrLen ) < 0 ){
+		if(m_sock_client = accept(m_sock_server,(struct sockaddr *)&m_clientAddr, &m_clientAddrLen ) < 0 ){
 			std::cout << "failed to accept any new connections" << std::endl;
 		}
 
@@ -70,27 +70,31 @@ int FTPServer::runService(void)
 
 void FTPServer::handleConnection(void)
 {
-	packet_t *dataBuf = new packet_t;
+	packet_t dataBuf;
 
 	/* clear the dataBuf */
-	memset(dataBuf,0,sizeof(*dataBuf));
-
-	while (strncmp(dataBuf->payload,"close",5)){
+	memset(&dataBuf,0,sizeof(dataBuf));
+	printf("packet buffer cleared...\n");
+	
+	while (strncmp(dataBuf.payload,"close",5)){
 		
 		/* receive the metadata for the packet */
-		recvfrom(m_sock_client,&dataBuf->metaData,sizeof(dataBuf->metaData),
-			0,(struct sockaddr *)&m_clientAddr,&m_clientAddrLen);
+		recv(m_sock_client,&dataBuf.metaData,sizeof(dataBuf.metaData),0);
+		
+		printf("received metadata from client...\n");
+		printf("length of packet = %d\n",dataBuf.metaData.payload_len);
+		std::cout << dataBuf.metaData.packetType << " "
+			<< dataBuf.metaData.payload_len << std::endl;
 		
 		/* receive the packet using packet length from metadata */
-		recvfrom(m_sock_client,&dataBuf->payload,sizeof(dataBuf->metaData.packet_len),
-			0,(struct sockaddr *)&m_clientAddr,&m_clientAddrLen);
-
-		for(int i=0;i<dataBuf->metaData.packet_len;i++){
-			std::cout << dataBuf->payload[i];
+		recv(m_sock_client,&dataBuf.payload,dataBuf.metaData.payload_len,0);
+		
+		for(int i=0;i<dataBuf.metaData.payload_len;i++){
+			std::cout << dataBuf.payload[i];
 		}
 		std::cout << std::endl;
 
-		send(m_sock_client,dataBuf->payload,dataBuf->metaData.packet_len,0);
+		send(m_sock_client,dataBuf.payload,dataBuf.metaData.payload_len,0);
 
 		close(m_sock_client);
 		return;
